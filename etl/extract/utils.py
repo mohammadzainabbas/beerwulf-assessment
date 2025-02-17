@@ -2,19 +2,24 @@
 Utility functions for extraction.
 """
 
-from typing import List
+from typing import Dict, Any
 import pandas as pd
 
 
-def read_tbl(file_path: str, names: List[str]) -> pd.DataFrame:
+def read_tbl(file_path: str, col_defs: Dict[str, Any]) -> pd.DataFrame:
     """
-    Reads a .tbl file into a pandas DataFrame.
-
+    Reads a .tbl file into a pandas DataFrame using column definitions that include both names and dtypes.
+    
     :param file_path: Path to the .tbl file.
-    :param names: List of column names.
-    :return: DataFrame with the data.
+    :param col_defs: Dictionary mapping column names to their expected data types.
+    :return: DataFrame with the data and proper dtypes.
     """
-    # The extra column is dropped due to trailing delimiter issues.
+    cols = list(col_defs.keys())
     return pd.read_csv(
-        file_path, sep="|", header=None, names=names, engine="python"
+        file_path,
+        sep="|",
+        header=None,
+        names=cols,
+        engine="python",
+        dtype=col_defs
     )
