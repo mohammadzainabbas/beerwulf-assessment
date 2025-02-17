@@ -71,7 +71,7 @@
 ### Star Schema (ERD)
 
 <div align="center"> 
-    <img src="assets/star_schema.png" alt="Star Schema (ERD)">
+    <img src="assets/star_schema.png" alt="Star Schema (ERD)" style="max-width: 75%;">
 </div>
 
 #
