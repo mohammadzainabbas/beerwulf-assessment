@@ -55,3 +55,19 @@ LIMIT 5;
 -- Reason: Computation on ORDER_DATE is minimized by grouping on the formatted month, ensuring efficient aggregation.
 ----------------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------------
+-- d. Who are the top customer(s) in terms of either revenue or quantity?
+----------------------------------------------------------------------------------------------------------------------------
+-- Aggregates both revenue and quantity per customer, ordering by revenue and quantity to identify top customers.
+----------------------------------------------------------------------------------------------------------------------------
+SELECT c.C_NAME, SUM(f.REVENUE) AS TotalRevenue, SUM(f.QUANTITY) AS TotalQuantity
+FROM FACT_SALES f
+JOIN DIM_CUSTOMER c ON f.CUSTOMER_KEY = c.C_CUSTKEY
+GROUP BY c.C_CUSTKEY
+ORDER BY TotalRevenue DESC, TotalQuantity DESC
+LIMIT 1;
+----------------------------------------------------------------------------------------------------------------------------
+-- Reason: Composite ordering using indexed customer keys allows for a rapid lookup of top-performing customers.
+----------------------------------------------------------------------------------------------------------------------------
+
+
