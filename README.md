@@ -1,5 +1,5 @@
 <div align="center"> 
-    <h2> Beerwulf <code>Data Assessment</code> 💻 </h2>
+    <h3> Beerwulf <code>Data Assessment</code> 💻 </h3>
 </div>
 
 #
@@ -36,22 +36,55 @@
 
 </div>
 
+> [!IMPORTANT]
+> This repository contains code for a simplified ETL process to load a provided dataset into a star schema.
+>
+> **Key points:**
+>
+> - [x] Designed a star schema with fact and dimension tables.
+> - [x] ETL scripts to populate the schema.
+> - [x] Added a customer account balance classification (`Low`, `Medium`, `High`) using `C_ACCTBAL` and computed revenue per line item. *(Extra points)*
+> - [x] Dockerized environment and `uv` for reproducible Python management.
+> - [x] Instructions for scheduling, streaming data handling, and production deployment are described below.
+
+#
+
+## Project Structure
+
+- [**`etl/`**](https://github.com/mohammadzainabbas/beerwulf-assessment/tree/main/etl) – Contains modular ETL scripts for extraction, transformation (including customer classification and revenue calculation), and loading into a SQLite star schema.
+- [**`sql/ddl_star.sql`**](https://github.com/mohammadzainabbas/beerwulf-assessment/blob/main/sql/ddl_star.sql) – DDL for creating the star schema.
+- [**`sql/reporting.sql`**](https://github.com/mohammadzainabbas/beerwulf-assessment/blob/main/sql/reporting.sql) – Optimized SQL queries answering key business questions.
+- [**`Dockerfile`**](https://github.com/mohammadzainabbas/beerwulf-assessment/blob/main/Dockerfile) – For reproducible environment to quickly start interacting with star schema with `sqlite3` shell.
+
+#
+
+## ETL Process Overview
+
+- **Extraction:** Reads raw `.tbl` files (delimited by `|`) using `pandas`.
+- **Transformation:** 
+  - Creates dimension tables (customer, part, supplier, date) and fact table (sales).
+  - Computes revenue per line item as `L_EXTENDEDPRICE * (1 - L_DISCOUNT)`.
+  - Classifies customers based on `C_ACCTBAL` into `Low`, `Medium`, and `High`.
+- **Loading:** Writes data into a SQLite database (`star_schema.db`) using `SQLAlchemy`.
+
 #
 
 ## Getting Started
 
 ### Prerequisites
 
-You need one of the following tools to run this project
+You need one of the following tools to run this project:
 
 - Install [`docker`](https://docs.docker.com/get-docker/)
 - Install [`uv`](https://docs.astral.sh/uv/getting-started/installation/)
 - Install [`sqlite3` (optional)](https://www.sqlite.org/download.html)
 
 > [!TIP]
-> Install `sqlite3` only if you want to interact with the `star_schema.db` file.
+> Install `sqlite3` only if you want to interact with the database using a SQL client.
 
-### Clone the repository
+### Step-by-Step Guide
+
+1. **Clone the repository**
 
 ```bash
 gh repo clone mohammadzainabbas/beerwulf-assessment
@@ -65,16 +98,18 @@ git clone https://github.com/mohammadzainabbas/beerwulf-assessment.git
 cd beerwulf-assessment/
 ```
 
-### Run `ETL` process to generate `star_schema.db` file
+2. **Run the ETL process**
 
-Run the following commands to extract, transform and load the data into a star schema model 
+This will execute the ETL process and load the star schema into a SQLite file (`star_schema.db`).
+
+**Using `uv`:**
 
 ```bash
 uv sync
 uv run -- python etl/main.py
 ```
 
-or skip all that and run the following command to generate `star_schema.db` via `docker`:
+**Using Docker:**
 
 ```bash
 docker build -t beerwulf-assessment .
@@ -83,15 +118,15 @@ docker build -t beerwulf-assessment .
 > [!NOTE]
 > Above `docker` command will install all the dependencies, run the [`etl/main.py`](https://github.com/mohammadzainabbas/beerwulf-assessment/blob/main/etl/main.py) script to generate the `star_schema.db` file and invoke the `sqlite3` shell to interact with the database.
 
-### Interact with the `star_schema.db` file (optional)
+3. **Interact with the `star_schema.db` file (optional)**
 
-Once you have the `star_schema.db` file, you can run the following command to interact with the database:
+To open the database using `sqlite3`:
 
 ```bash
 sqlite3 star_schema.db
 ```
 
-or with `docker`:
+Or via Docker:
 
 ```bash
 docker run --rm -it beerwulf-assessment
@@ -101,12 +136,110 @@ docker run --rm -it beerwulf-assessment
 > `docker run --rm -it beerwulf-assessment` command will open the `sqlite3` shell with the `star_schema.db` file.
 
 
-### Query the `star_schema.db` file
+4. **Query the Database**
 
-1. To get the list of tables:
+Inside the `sqlite3` shell, list tables:
 
 ```sql
-sqlite> .tables
+.tables
 ```
 
-You should see tables such as `DIM_CUSTOMER`, `DIM_PART`, `DIM_SUPPLIER`, `DIM_DATE`, `FACT_SALES`, `NATION`, and `REGION`.
+You should see:
+- `DIM_CUSTOMER`
+- `DIM_PART`
+- `DIM_SUPPLIER`
+- `DIM_DATE`
+- `FACT_SALES`
+- `NATION`
+- `REGION`
+
+5. **Run Reporting SQL**
+
+Execute the queries in [`sql/reporting.sql`](https://github.com/mohammadzainabbas/beerwulf-assessment/blob/main/sql/reporting.sql) against the `star_schema.db` to get insights such as:
+- Bottom 3 nations by revenue.
+- Most common shipping mode among the top 3 revenue nations.
+- Top 5 selling months.
+- Top customer by revenue and quantity.
+- Financial year revenue comparison (01 July to 30 June).
+
+5.1 **Run Reporting SQL using `sqlite3`**
+
+```bash
+sqlite3 star_schema.db < sql/reporting.sql
+```
+or via `sqlite3` shell:
+
+```sql
+.read sql/reporting.sql
+```
+
+> [!TIP]
+> Use either`docker run --rm -it beerwulf-assessment` (recommended) or `sqlite3 star_schema.db` to invoke the `sqlite3` shell.
+
+you will get the following output:
+
+```console
+a. What are the bottom 3 nations in terms of revenue?
+
+FRANCE|51639851.2326
+UNITED STATES|62639122.3148
+CHINA|62655992.4855
+
+b. From the top 3 nations, what is the most common shipping mode?
+
+MAIL|1326
+
+c. What are the top 5 selling months?
+
+1993-12|29616353.0134
+1993-10|29558233.359
+1992-01|29253389.6627
+1996-08|28974470.7184
+1995-12|28896188.4313
+
+d. Who are the top customer(s) in terms of either revenue or quantity?
+
+Customer#000001489|5203674.0537|3868
+
+e. Year-to-year (01 July to 30 June) revenue comparison
+
+1991|158375772.9748
+1992|150268078.0022
+1993|159642098.8766
+1994|145590310.9984
+1995|151234051.8555
+1996|157840062.3416
+1997|152206305.2098
+1992|150106602.3629
+1993|166276857.4409
+1994|156628814.3035
+1995|158320183.1037
+1996|160694305.925
+1997|150152577.1478
+1998|27798921.5512
+```
+
+#
+
+## Answers to Questions regarding Microsoft Azure Data Stack
+
+1. **Describe how you can schedule this process to run multiple times per day.**
+
+Use [Azure Data Factory](https://azure.microsoft.com/en-us/services/data-factory/) or [Azure Functions](https://docs.microsoft.com/en-us/azure/azure-functions/) with a Timer Trigger to schedule the Docker container (or Python script) multiple times per day.
+
+2. **What would you do to cater for data arriving in random order?**
+
+- Use a staging area where incoming data is timestamped.
+- Apply watermarking or partitioning during transformation to process only new or out-of-order data.
+
+3. **What about if the data comes from a stream, and arrives at random times?**
+
+For continuous data streams, consider using [Azure Stream Analytics](https://azure.microsoft.com/en-us/services/stream-analytics/) or [Azure Event Hubs](https://azure.microsoft.com/en-us/services/event-hubs/) to ingest and process data in near real time.
+
+4. **Describe how you would deploy your code to production, and allow for future maitenance.**
+
+- Containerize the solution (as shown with Docker).
+- Utilize CI/CD pipelines (e.g., Azure DevOps) for automated builds and tests.
+- Deploy on platforms like Azure Kubernetes Service (AKS) or Azure Container Instances.
+- Ensure logging, monitoring, and version control are in place for future maintenance.
+- Use IaC like Pulumi, Terraform or ARM templates to deploy infrastructure.
