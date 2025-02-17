@@ -55,6 +55,7 @@ LIMIT 5;
 -- Reason: Computation on ORDER_DATE is minimized by grouping on the formatted month, ensuring efficient aggregation.
 ----------------------------------------------------------------------------------------------------------------------------
 
+
 ----------------------------------------------------------------------------------------------------------------------------
 -- d. Who are the top customer(s) in terms of either revenue or quantity?
 ----------------------------------------------------------------------------------------------------------------------------
@@ -71,3 +72,20 @@ LIMIT 1;
 ----------------------------------------------------------------------------------------------------------------------------
 
 
+----------------------------------------------------------------------------------------------------------------------------
+-- e. Year-to-year (01 July to 30 June) revenue comparison
+----------------------------------------------------------------------------------------------------------------------------
+-- Uses CASE to group orders into financial years and aggregates revenue, ideal for financial reporting.
+----------------------------------------------------------------------------------------------------------------------------
+SELECT 
+  CASE 
+    WHEN strftime('%m', ORDER_DATE) >= '07' THEN strftime('%Y', ORDER_DATE)
+    ELSE strftime('%Y', ORDER_DATE) - 1
+  END AS FinancialYear,
+  SUM(REVENUE) AS TotalRevenue
+FROM FACT_SALES
+GROUP BY FinancialYear
+ORDER BY FinancialYear;
+----------------------------------------------------------------------------------------------------------------------------
+-- Reason: Computed grouping on financial year reduces processing overhead by collapsing data into fewer groups.
+----------------------------------------------------------------------------------------------------------------------------
