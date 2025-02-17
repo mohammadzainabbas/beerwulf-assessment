@@ -71,7 +71,7 @@
 ### Star Schema (ERD)
 
 <div align="center"> 
-    <img src="assets/star_schema.png" alt="Star Schema (ERD)" style="max-width: 75%;">
+    <img src="assets/star_schema.png" alt="Star Schema (ERD)" width="75%">
 </div>
 
 #
@@ -258,7 +258,7 @@ Deploy your code as a containerized solution using Docker. For production, lever
 #### What are the bottom 3 nations in terms of revenue?
 
 <details>
-<summary>*SQL Query:*</summary>
+<summary>SQL Query:</summary>
 
 ```sql
 SELECT n.N_NAME AS Nation, SUM(f.REVENUE) AS TotalRevenue
@@ -273,7 +273,7 @@ LIMIT 3;
 </details>
 
 <details>
-<summary>*Output:*</summary>
+<summary>Output:</summary>
 
 
 | Nation | TotalRevenue |
@@ -287,7 +287,7 @@ LIMIT 3;
 #### From the top 3 nations, what is the most common shipping mode?
 
 <details>
-<summary>*SQL Query:*</summary>
+<summary>SQL Query:</summary>
 
 ```sql
 WITH TopNations AS (
@@ -311,7 +311,7 @@ LIMIT 1;
 </details>
 
 <details>
-<summary>*Output:*</summary>
+<summary>Output:</summary>
 
 |CommonShipMode|ModeCount|
 |--------------|---------|
@@ -322,7 +322,7 @@ LIMIT 1;
 #### What are the top 5 selling months?
 
 <details>
-<summary>*SQL Query:*</summary>
+<summary>SQL Query:</summary>
 
 ```sql
 SELECT strftime('%Y-%m', ORDER_DATE) AS Month, SUM(REVENUE) AS TotalRevenue
@@ -335,7 +335,7 @@ LIMIT 5;
 </details>
 
 <details>
-<summary>*Output:*</summary>
+<summary>Output:</summary>
 
 |Month|TotalRevenue|
 |-----|------------|
@@ -350,7 +350,7 @@ LIMIT 5;
 #### Who are the top customer(s) in terms of either revenue or quantity?
 
 <details>
-<summary>*SQL Query:*</summary>
+<summary>SQL Query:</summary>
 
 ```sql
 SELECT c.C_NAME AS CustomerName, SUM(f.REVENUE) AS TotalRevenue, SUM(f.QUANTITY) AS TotalQuantity
@@ -364,7 +364,7 @@ LIMIT 1;
 </details>
 
 <details>
-<summary>*Output:*</summary>
+<summary>Output:</summary>
 
 |CustomerName|TotalRevenue|TotalQuantity|
 |------------|------------|-------------|
@@ -375,7 +375,7 @@ LIMIT 1;
 #### Compare the sales revenue on a financial year-to-year (01 July to 30 June) basis.
 
 <details>
-<summary>*SQL Query:*</summary>
+<summary>SQL Query:</summary>
 
 ```sql
 SELECT 
@@ -392,7 +392,7 @@ ORDER BY FinancialYear;
 </details>
 
 <details>
-<summary>*Output:*</summary>
+<summary>Output:</summary>
 
 |FinancialYear|TotalRevenue|
 |-------------|------------|
