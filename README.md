@@ -53,7 +53,7 @@
 
 - [**`etl/`**](https://github.com/mohammadzainabbas/beerwulf-assessment/tree/main/etl) – Contains modular ETL scripts for extraction, transformation (including customer classification and revenue calculation), and loading into a SQLite star schema.
 - [**`sql/ddl_star.sql`**](https://github.com/mohammadzainabbas/beerwulf-assessment/blob/main/sql/ddl_star.sql) – DDL for creating the star schema.
-- [**`sql/reporting.sql`**](https://github.com/mohammadzainabbas/beerwulf-assessment/blob/main/sql/reporting.sql) – Optimized SQL queries answering key business questions.
+- [**`sql/reporting.sql`**](https://github.com/mohammadzainabbas/beerwulf-assessment/blob/main/sql/reporting.sql) – Optimized SQL queries answering key business questions (see 5.a to 5.e in [REQUIREMENTS.md](https://github.com/mohammadzainabbas/beerwulf-assessment/blob/main/REQUIREMENTS.md)).
 - [**`Dockerfile`**](https://github.com/mohammadzainabbas/beerwulf-assessment/blob/main/Dockerfile) – For reproducible environment to quickly start interacting with star schema with `sqlite3` shell.
 
 #
@@ -62,10 +62,17 @@
 
 - **Extraction:** Reads raw `.tbl` files (delimited by `|`) using `pandas`.
 - **Transformation:** 
-  - Creates dimension tables (customer, part, supplier, date) and fact table (sales).
+  - Creates dimension tables (`customer`, `part`, `supplier`, `date`) and fact table (`sales`).
   - Computes revenue per line item as `L_EXTENDEDPRICE * (1 - L_DISCOUNT)`.
   - Classifies customers based on `C_ACCTBAL` into `Low`, `Medium`, and `High`.
 - **Loading:** Writes data into a SQLite database (`star_schema.db`) using `SQLAlchemy`.
+
+
+### Star Schema (ERD)
+
+<div align="center"> 
+    <img src="assets/star_schema.png" alt="Star Schema (ERD)">
+</div>
 
 #
 
@@ -243,3 +250,139 @@ For continuous data streams, consider using [Azure Stream Analytics](https://azu
 - Deploy on platforms like Azure Kubernetes Service (AKS) or Azure Container Instances.
 - Ensure logging, monitoring, and version control are in place for future maintenance.
 - Use IaC like Pulumi, Terraform or ARM templates to deploy infrastructure.
+
+5.a. **What are the bottom 3 nations in terms of revenue?**
+
+*SQL Query:*
+
+```sql
+SELECT n.N_NAME AS Nation, SUM(f.REVENUE) AS TotalRevenue
+FROM FACT_SALES f
+JOIN DIM_CUSTOMER c ON f.CUSTOMER_KEY = c.C_CUSTKEY
+JOIN NATION n ON c.C_NATIONKEY = n.N_NATIONKEY
+GROUP BY n.N_NAME
+ORDER BY TotalRevenue ASC
+LIMIT 3;
+```
+
+*Output:*
+
+| Nation | TotalRevenue |
+|--------|--------------|
+|FRANCE|51639851.2326|
+|UNITED STATES|62639122.3148|
+|CHINA|62655992.4855|
+
+5.b. **From the top 3 nations, what is the most common shipping mode?**
+
+*SQL Query:*
+
+```sql
+WITH TopNations AS (
+  SELECT n.N_NATIONKEY, n.N_NAME, SUM(f.REVENUE) AS TotalRevenue
+  FROM FACT_SALES f
+  JOIN DIM_CUSTOMER c ON f.CUSTOMER_KEY = c.C_CUSTKEY
+  JOIN NATION n ON c.C_NATIONKEY = n.N_NATIONKEY
+  GROUP BY n.N_NATIONKEY, n.N_NAME
+  ORDER BY TotalRevenue DESC
+  LIMIT 3
+)
+SELECT f.SHIP_MODE AS CommonShipMode, COUNT(*) AS ModeCount
+FROM FACT_SALES f
+JOIN DIM_CUSTOMER c ON f.CUSTOMER_KEY = c.C_CUSTKEY
+JOIN TopNations t ON c.C_NATIONKEY = t.N_NATIONKEY
+GROUP BY f.SHIP_MODE
+ORDER BY ModeCount DESC
+LIMIT 1;
+```
+
+*Output:*
+
+|CommonShipMode|ModeCount|
+|--------------|---------|
+|MAIL|1326|
+
+5.c. **What are the top 5 selling months?**
+
+*SQL Query:*
+
+```sql
+SELECT strftime('%Y-%m', ORDER_DATE) AS Month, SUM(REVENUE) AS TotalRevenue
+FROM FACT_SALES
+GROUP BY Month
+ORDER BY TotalRevenue DESC
+LIMIT 5;
+```
+
+*Output:*
+
+|Month|TotalRevenue|
+|-----|------------|
+|1993-12|29616353.0134|
+|1993-10|29558233.359|
+|1992-01|29253389.6627|
+|1996-08|28974470.7184|
+|1995-12|28896188.4313|
+
+5.d. **Who are the top customer(s) in terms of either revenue or quantity?**
+
+*SQL Query:*
+
+```sql
+SELECT c.C_NAME AS CustomerName, SUM(f.REVENUE) AS TotalRevenue, SUM(f.QUANTITY) AS TotalQuantity
+FROM FACT_SALES f
+JOIN DIM_CUSTOMER c ON f.CUSTOMER_KEY = c.C_CUSTKEY
+GROUP BY c.C_CUSTKEY
+ORDER BY TotalRevenue DESC, TotalQuantity DESC
+LIMIT 1;
+```
+
+*Output:*
+
+|CustomerName|TotalRevenue|TotalQuantity|
+|------------|------------|-------------|
+|Customer#000001489|5203674.0537|3868|
+
+
+5.e. **Compare the sales revenue on a financial year-to-year (01 July to 30 June) basis.**
+
+*SQL Query:*
+
+```sql
+SELECT 
+  CASE 
+    WHEN strftime('%m', ORDER_DATE) >= '07' THEN strftime('%Y', ORDER_DATE)
+    ELSE strftime('%Y', ORDER_DATE) - 1
+  END AS FinancialYear,
+  SUM(REVENUE) AS TotalRevenue
+FROM FACT_SALES
+GROUP BY FinancialYear
+ORDER BY FinancialYear;
+```
+
+*Output:*
+
+|FinancialYear|TotalRevenue|
+|-------------|------------|
+|1991|158375772.9748|
+|1992|150268078.0022|
+|1993|159642098.8766|
+|1994|145590310.9984|
+|1995|151234051.8555|
+|1996|157840062.3416|
+|1997|152206305.2098|
+|1992|150106602.3629|
+|1993|166276857.4409|
+|1994|156628814.3035|
+|1995|158320183.1037|
+|1996|160694305.925|
+|1997|150152577.1478|
+|1998|27798921.5512|
+
+#
+
+## Conclusion
+
+This project demonstrates a simplified ETL process to load a provided dataset into a star schema. The project is containerized for reproducibility and includes optimized SQL queries to answer key business questions. The project also provides insights into scheduling, handling random data, and deploying to production using *Microsoft Azure Data Stack.*
+
+#
