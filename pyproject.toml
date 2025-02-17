@@ -1,0 +1,7 @@
+[project]
+name = "beerwulf-assessment"
+version = "0.1.0"
+description = "A simple ETL project for Beerwulf data assessment"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
