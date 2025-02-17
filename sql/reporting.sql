@@ -5,7 +5,7 @@
 ----------------------------------------------------------------------------------------------------------------------------
 SELECT 'a. What are the bottom 3 nations in terms of revenue?' AS Question;
 SELECT '';  -- Blank line for readability
-SELECT n.N_NAME, SUM(f.REVENUE) AS TotalRevenue
+SELECT n.N_NAME AS Nation, SUM(f.REVENUE) AS TotalRevenue
 FROM FACT_SALES f
 JOIN DIM_CUSTOMER c ON f.CUSTOMER_KEY = c.C_CUSTKEY
 JOIN NATION n ON c.C_NATIONKEY = n.N_NATIONKEY
@@ -34,7 +34,7 @@ WITH TopNations AS (
   ORDER BY TotalRevenue DESC
   LIMIT 3
 )
-SELECT f.SHIP_MODE, COUNT(*) AS ModeCount
+SELECT f.SHIP_MODE AS CommonShipMode, COUNT(*) AS ModeCount
 FROM FACT_SALES f
 JOIN DIM_CUSTOMER c ON f.CUSTOMER_KEY = c.C_CUSTKEY
 JOIN TopNations t ON c.C_NATIONKEY = t.N_NATIONKEY
@@ -72,7 +72,7 @@ SELECT '';  -- Blank line for readability
 ----------------------------------------------------------------------------------------------------------------------------
 SELECT 'd. Who are the top customer(s) in terms of either revenue or quantity?' AS Question;
 SELECT '';  -- Blank line for readability
-SELECT c.C_NAME, SUM(f.REVENUE) AS TotalRevenue, SUM(f.QUANTITY) AS TotalQuantity
+SELECT c.C_NAME AS CustomerName, SUM(f.REVENUE) AS TotalRevenue, SUM(f.QUANTITY) AS TotalQuantity
 FROM FACT_SALES f
 JOIN DIM_CUSTOMER c ON f.CUSTOMER_KEY = c.C_CUSTKEY
 GROUP BY c.C_CUSTKEY
