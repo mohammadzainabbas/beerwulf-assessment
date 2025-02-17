@@ -17,4 +17,4 @@ def read_tbl(file_path: str, names: List[str]) -> pd.DataFrame:
     # The extra column is dropped due to trailing delimiter issues.
     return pd.read_csv(
         file_path, sep="|", header=None, names=names, engine="python"
-    ).drop(columns=[len(names)])
+    )

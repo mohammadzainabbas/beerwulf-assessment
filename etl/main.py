@@ -3,7 +3,7 @@ Main ETL script that orchestrates extraction, transformation, and loading.
 """
 
 import os
-from etl.extract import (
+from extract import (
     extract_customers,
     extract_orders,
     extract_lineitems,
@@ -12,14 +12,14 @@ from etl.extract import (
     extract_nations,
     extract_regions,
 )
-from etl.transform import (
+from transform import (
     build_dim_customer,
     build_dim_part,
     build_dim_supplier,
     build_fact_sales,
     build_dim_date,
 )
-from etl.load import load_to_sql, create_engine_conn
+from load import load_to_sql, create_engine_conn
 
 
 def main() -> None:
