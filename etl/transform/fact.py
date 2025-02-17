@@ -13,13 +13,14 @@ def build_fact_sales(
 
     :param df_orders: DataFrame containing orders.
     :param df_lineitems: DataFrame containing line items.
-    :return: Fact table DataFrame.
+    :return: Fact table DataFrame with proper column names and computed revenue.
     """
     fact = pd.merge(
         df_orders, df_lineitems, left_on="O_ORDERKEY", right_on="L_ORDERKEY"
     )
     # Compute revenue per line item: extended price * (1 - discount)
     fact["REVENUE"] = fact["L_EXTENDEDPRICE"] * (1 - fact["L_DISCOUNT"])
+    # Explicitly copy the slice to avoid SettingWithCopyWarning (https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy)
     fact_sales = fact[
         [
             "O_ORDERKEY",
@@ -34,7 +35,7 @@ def build_fact_sales(
             "REVENUE",
             "L_SHIPMODE",
         ]
-    ]
+    ].copy()
     fact_sales.rename(
         columns={
             "O_ORDERKEY": "ORDER_KEY",
