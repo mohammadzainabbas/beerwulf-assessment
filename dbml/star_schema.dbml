@@ -1,0 +1,74 @@
+Table DIM_CUSTOMER {
+  C_CUSTKEY int [pk]
+  C_NAME text
+  C_ADDRESS text
+  C_NATIONKEY int
+  C_PHONE text
+  C_ACCTBAL float
+  C_MKTSEGMENT text
+  C_CLASSIFICATION text
+  C_COMMENT text
+}
+
+Table DIM_PART {
+  P_PARTKEY int [pk]
+  P_NAME text
+  P_MFGR text
+  P_BRAND text
+  P_TYPE text
+  P_SIZE int
+  P_CONTAINER text
+  P_RETAILPRICE float
+  P_COMMENT text
+}
+
+Table DIM_SUPPLIER {
+  S_SUPPKEY int [pk]
+  S_NAME text
+  S_ADDRESS text
+  S_NATIONKEY int
+  S_PHONE text
+  S_ACCTBAL float
+  S_COMMENT text
+}
+
+Table DIM_DATE {
+  DATE text [pk]
+  DAY int
+  MONTH int
+  YEAR int
+  FIN_YEAR int
+}
+
+Table FACT_SALES {
+  ORDER_KEY int [pk]
+  CUSTOMER_KEY int
+  ORDER_DATE text
+  SHIP_DATE text
+  PART_KEY int
+  SUPPLIER_KEY int
+  QUANTITY int
+  EXTENDED_PRICE float
+  DISCOUNT float
+  REVENUE float
+  SHIP_MODE text
+}
+
+Table NATION {
+  N_NATIONKEY int [pk]
+  N_NAME text
+  N_REGIONKEY int
+  N_COMMENT text
+}
+
+Table REGION {
+  R_REGIONKEY int [pk]
+  R_NAME text
+  R_COMMENT text
+}
+
+Ref: DIM_CUSTOMER.C_NATIONKEY > NATION.N_NATIONKEY
+Ref: DIM_SUPPLIER.S_NATIONKEY > NATION.N_NATIONKEY
+Ref: FACT_SALES.CUSTOMER_KEY > DIM_CUSTOMER.C_CUSTKEY
+Ref: FACT_SALES.PART_KEY > DIM_PART.P_PARTKEY
+Ref: FACT_SALES.SUPPLIER_KEY > DIM_SUPPLIER.S_SUPPKEY
