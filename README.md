@@ -71,7 +71,7 @@
 ### Star Schema (ERD)
 
 <div align="center"> 
-    <img src="assets/star_schema.png" alt="Star Schema (ERD)" style="max-width: 75%;">
+    <img src="assets/star_schema.png" alt="Star Schema (ERD)" width="75%">
 </div>
 
 #
@@ -183,7 +183,8 @@ or via `sqlite3` shell:
 > [!TIP]
 > Use either`docker run --rm -it beerwulf-assessment` (recommended) or `sqlite3 star_schema.db` to invoke the `sqlite3` shell.
 
-you will get the following output:
+<details>
+<summary>you will get the following output:</summary>
 
 ```console
 a. What are the bottom 3 nations in terms of revenue?
@@ -226,34 +227,38 @@ e. Year-to-year (01 July to 30 June) revenue comparison
 1998|27798921.5512
 ```
 
+</details>
+
 #
 
 ## Answers to Questions regarding Microsoft Azure Data Stack
 
-1. **Describe how you can schedule this process to run multiple times per day.**
+### Describe how you can schedule this process to run multiple times per day.
 
-Use [Azure Data Factory](https://azure.microsoft.com/en-us/services/data-factory/) or [Azure Functions](https://docs.microsoft.com/en-us/azure/azure-functions/) with a Timer Trigger to schedule the Docker container (or Python script) multiple times per day.
+You can use [Azure Data Factory](https://azure.microsoft.com/en-us/services/data-factory/) (ADF) to schedule and orchestrate your ETL process. ADF allows you to create pipelines with schedule or tumbling window triggers to run your containerized ETL job (e.g., via a custom activity that runs your Docker image). This setup supports incremental loads by accepting parameters (such as watermark values) that ensure only new or updated data is processed.
 
-2. **What would you do to cater for data arriving in random order?**
+Alternatively, you can use [Azure Functions](https://docs.microsoft.com/en-us/azure/azure-functions/) with a Timer Trigger to invoke the ETL process at regular intervals. This dual approach offers flexibility: ADF for complex orchestration and Azure Functions for lightweight scheduling.
 
-- Use a staging area where incoming data is timestamped.
-- Apply watermarking or partitioning during transformation to process only new or out-of-order data.
+### What would you do to cater for data arriving in random order?
 
-3. **What about if the data comes from a stream, and arrives at random times?**
+To handle data arriving out-of-order, implement a staging area (for example, using [Azure Blob Storage](https://azure.microsoft.com/en-us/products/storage/blobs/) or [Data Lake Storage](https://azure.microsoft.com/en-us/products/storage/data-lake-storage/)) where raw data is ingested regardless of order. Once staged, use watermarking techniques by adding ingestion timestamps to each record and maintain a control table that tracks the last processed timestamp. This allows your ETL process to filter and only process new data. 
 
-For continuous data streams, consider using [Azure Stream Analytics](https://azure.microsoft.com/en-us/services/stream-analytics/) or [Azure Event Hubs](https://azure.microsoft.com/en-us/services/event-hubs/) to ingest and process data in near real time.
+Additionally, partition your target tables (in Azure SQL Database or Synapse) by date or another logical key to improve query performance and simplify the loading of incremental data.
 
-4. **Describe how you would deploy your code to production, and allow for future maitenance.**
+### What about if the data comes from a stream, and arrives at random times?
 
-- Containerize the solution (as shown with Docker).
-- Utilize CI/CD pipelines (e.g., Azure DevOps) for automated builds and tests.
-- Deploy on platforms like Azure Kubernetes Service (AKS) or Azure Container Instances.
-- Ensure logging, monitoring, and version control are in place for future maintenance.
-- Use IaC like Pulumi, Terraform or ARM templates to deploy infrastructure.
+For continuous data streams, use [Azure Event Hubs](https://azure.microsoft.com/en-us/services/event-hubs/) to ingest real-time data. Process the incoming stream with [Azure Stream Analytics](https://azure.microsoft.com/en-us/services/stream-analytics/), which can apply windowing functions (e.g., tumbling or sliding windows) to aggregate and filter the data. The aggregated data can then be sent in micro-batches to your data warehouse or staging area, with further processing orchestrated by [Azure Data Factory](https://azure.microsoft.com/en-us/products/data-factory/) or [Azure Databricks](https://azure.microsoft.com/en-us/services/databricks/).
 
-5.a. **What are the bottom 3 nations in terms of revenue?**
+### Describe how you would deploy your code to production, and allow for future maitenance.
 
-*SQL Query:*
+Deploy your code as a containerized solution using Docker. For production, leverage [Azure Kubernetes Service (AKS)](https://azure.microsoft.com/en-us/products/kubernetes-service) or [Azure Container Instances (ACI)](https://azure.microsoft.com/en-us/products/container-instances/) for orchestration, ensuring scalability and high availability. Use CI/CD pipelines via [Azure DevOps](https://azure.microsoft.com/en-us/products/devops/) or [GitHub Actions](https://github.com/features/actions) to automate building, testing, and deployment of your Docker images. Implement robust monitoring and logging with [Azure Monitor](https://azure.microsoft.com/en-us/products/monitor/) and Application Insights to track performance and diagnose issues. Secure your configuration and secrets (like connection strings) using [Azure Key Vault](https://azure.microsoft.com/en-us/products/key-vault/) or [Pulumi ESC](https://www.pulumi.com/docs/esc/). This modular, containerized approach combined with automated deployment and proactive monitoring makes the solution both scalable and easy to maintain.
+
+### OLAP Queries
+
+#### What are the bottom 3 nations in terms of revenue?
+
+<details>
+<summary>SQL Query:</summary>
 
 ```sql
 SELECT n.N_NAME AS Nation, SUM(f.REVENUE) AS TotalRevenue
@@ -265,7 +270,11 @@ ORDER BY TotalRevenue ASC
 LIMIT 3;
 ```
 
-*Output:*
+</details>
+
+<details>
+<summary>Output:</summary>
+
 
 | Nation | TotalRevenue |
 |--------|--------------|
@@ -273,9 +282,12 @@ LIMIT 3;
 |UNITED STATES|62639122.3148|
 |CHINA|62655992.4855|
 
-5.b. **From the top 3 nations, what is the most common shipping mode?**
+</details>
 
-*SQL Query:*
+#### From the top 3 nations, what is the most common shipping mode?
+
+<details>
+<summary>SQL Query:</summary>
 
 ```sql
 WITH TopNations AS (
@@ -296,15 +308,21 @@ ORDER BY ModeCount DESC
 LIMIT 1;
 ```
 
-*Output:*
+</details>
+
+<details>
+<summary>Output:</summary>
 
 |CommonShipMode|ModeCount|
 |--------------|---------|
 |MAIL|1326|
 
-5.c. **What are the top 5 selling months?**
+</details>
 
-*SQL Query:*
+#### What are the top 5 selling months?
+
+<details>
+<summary>SQL Query:</summary>
 
 ```sql
 SELECT strftime('%Y-%m', ORDER_DATE) AS Month, SUM(REVENUE) AS TotalRevenue
@@ -314,7 +332,10 @@ ORDER BY TotalRevenue DESC
 LIMIT 5;
 ```
 
-*Output:*
+</details>
+
+<details>
+<summary>Output:</summary>
 
 |Month|TotalRevenue|
 |-----|------------|
@@ -324,9 +345,12 @@ LIMIT 5;
 |1996-08|28974470.7184|
 |1995-12|28896188.4313|
 
-5.d. **Who are the top customer(s) in terms of either revenue or quantity?**
+</details>
 
-*SQL Query:*
+#### Who are the top customer(s) in terms of either revenue or quantity?
+
+<details>
+<summary>SQL Query:</summary>
 
 ```sql
 SELECT c.C_NAME AS CustomerName, SUM(f.REVENUE) AS TotalRevenue, SUM(f.QUANTITY) AS TotalQuantity
@@ -337,16 +361,21 @@ ORDER BY TotalRevenue DESC, TotalQuantity DESC
 LIMIT 1;
 ```
 
-*Output:*
+</details>
+
+<details>
+<summary>Output:</summary>
 
 |CustomerName|TotalRevenue|TotalQuantity|
 |------------|------------|-------------|
 |Customer#000001489|5203674.0537|3868|
 
+</details>
 
-5.e. **Compare the sales revenue on a financial year-to-year (01 July to 30 June) basis.**
+#### Compare the sales revenue on a financial year-to-year (01 July to 30 June) basis.
 
-*SQL Query:*
+<details>
+<summary>SQL Query:</summary>
 
 ```sql
 SELECT 
@@ -360,7 +389,10 @@ GROUP BY FinancialYear
 ORDER BY FinancialYear;
 ```
 
-*Output:*
+</details>
+
+<details>
+<summary>Output:</summary>
 
 |FinancialYear|TotalRevenue|
 |-------------|------------|
@@ -378,6 +410,8 @@ ORDER BY FinancialYear;
 |1996|160694305.925|
 |1997|150152577.1478|
 |1998|27798921.5512|
+
+</details>
 
 #
 
